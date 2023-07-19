@@ -114,8 +114,6 @@ class CreateIdea(graphene.Mutation):
         if visibility not in valid_visibility_choices:
             raise Exception('La visibilidad seleccionada no es válida.')
 
-        # Actualizar la visibilidad de la idea y guardarla en la base de datos
-        idea.visibility = visibility
         idea = Idea.objects.create(text=text, author=user, visibility=visibility)
 
         # Devolver la idea creada en la respuesta
@@ -128,14 +126,9 @@ class SetIdeaVisibility(graphene.Mutation):
     class Arguments:
         idea_id = graphene.ID(required=True)
         visibility = graphene.String(required=True)
-        token = graphene.String(required=True)  # Agregar argumento para el token
 
-    def mutate(self, info, idea_id, visibility, token):  # Agregar argumento 'token' a la función
-        # Verificar el token y obtener el usuario autenticado
-        try:
-            user = Token.objects.get(key=token).user
-        except Token.DoesNotExist:
-            raise Exception('Token de autenticación inválido.')
+    @login_required
+    def mutate(self, info, idea_id, visibility, ):
 
         # Verificar si el usuario es el autor de la idea
         try:
@@ -143,7 +136,7 @@ class SetIdeaVisibility(graphene.Mutation):
         except Idea.DoesNotExist:
             raise Exception('La idea no existe.')
 
-        if user != idea.author:
+        if info.context.user != idea.author:
             raise Exception('No tienes permisos para cambiar la visibilidad de esta idea.')
 
         # Verificar si la visibilidad es una opción válida
