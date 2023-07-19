@@ -217,4 +217,36 @@ class UserRegistrationTest(GraphQLTestCase):
         for i in range(len(ideas) - 1):
             self.assertGreaterEqual(ideas[i]['createdAt'], ideas[i + 1]['createdAt'])
 
+    
+    def test_delete_idea(self):
+        user = get_user_model().objects.create_user(email='test@example.com', username='testuser', password='testpassword')
+
+        idea = Idea.objects.create(
+            text='Prueba de idea',
+            author=user,
+            visibility='public',
+        )
+
+        # Autenticar el usuario antes de ejecutar la mutación
+        self.client.login(email='test@example.com', password='testpassword')
+
+
+        # Realizar la mutación para eliminar la idea
+        query = '''
+            mutation {
+              deleteIdea(ideaId: "%s") {
+                success
+              }
+            }
+        ''' % str(idea.id)
+
+        response = self.query(query)
+       # Verifica que la consulta fue exitosa
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['data']['deleteIdea']['success'])
+
+        # Verificar que la idea se eliminó de la base de datos
+        self.assertFalse(Idea.objects.filter(id=idea.id).exists())
+
+
 

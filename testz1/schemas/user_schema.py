@@ -149,7 +149,28 @@ class SetIdeaVisibility(graphene.Mutation):
 
         return SetIdeaVisibility(idea=idea)
 
-    
+class DeleteIdea(graphene.Mutation):
+    success = graphene.Boolean()
+
+    class Arguments:
+        idea_id = graphene.ID(required=True)
+
+    @login_required
+    def mutate(self, info, idea_id):
+        # Verificar si la idea existe y si el usuario autenticado es el autor
+        try:
+            idea = Idea.objects.get(id=idea_id)
+        except Idea.DoesNotExist:
+            raise Exception('La idea no existe.')
+
+        if info.context.user != idea.author:
+            raise Exception('No tienes permisos para eliminar esta idea.')
+
+        # Eliminar la idea de la base de datos
+        idea.delete()
+
+        return DeleteIdea(success=True)
+
 class Mutation(graphene.ObjectType):
     """Definición de las mutaciones disponibles."""
     register_user = RegisterUser.Field()
@@ -161,6 +182,7 @@ class Mutation(graphene.ObjectType):
     reset_password = ResetPassword.Field()
     create_idea = CreateIdea.Field()
     set_idea_visibility = SetIdeaVisibility.Field()
+    delete_idea = DeleteIdea.Field()
 
 class Query(graphene.ObjectType):
     """Definición de las consultas disponibles."""
