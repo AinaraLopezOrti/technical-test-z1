@@ -1,5 +1,6 @@
 from graphene_django.utils.testing import GraphQLTestCase
 from django.contrib.auth import get_user_model
+from ..models import Idea
 
 class UserRegistrationTest(GraphQLTestCase):
     GRAPHQL_URL = '/api/graphql/'
@@ -78,9 +79,10 @@ class UserRegistrationTest(GraphQLTestCase):
         """
         Prueba de creación de una idea mediante el API GraphQL con usuario autenticado.
         """
-        # Autenticar al usuario en el cliente GraphQL
 
         user = get_user_model().objects.create_user(email='test@example.com', username='testuser', password='testpassword')
+
+        # Autenticar el usuario antes de ejecutar la mutación
         self.client.login(email='test@example.com', password='testpassword')
         
         query = '''
@@ -110,11 +112,12 @@ class UserRegistrationTest(GraphQLTestCase):
 
     def test_change_visibility(self):
         """
-        Prueba de creación de una idea mediante el API GraphQL con usuario autenticado.
+        Prueba de modificación de la visibilidad de una idea de privado a protegido mediante el API GraphQL con usuario autenticado.
         """
-        # Autenticar al usuario en el cliente GraphQL
 
         user = get_user_model().objects.create_user(email='test@example.com', username='testuser', password='testpassword')
+
+        # Autenticar el usuario antes de ejecutar la mutación
         self.client.login(email='test@example.com', password='testpassword')
         
         query = '''
@@ -165,5 +168,53 @@ class UserRegistrationTest(GraphQLTestCase):
         response = self.query(query)
         # Verificar que la idea tiene visibilidad privada
         self.assertEqual(response.json()['data']['setIdeaVisibility']['idea']['visibility'], "PROTECTED")
+
+
+    def test_ideas_ordered_by_created_at(self):
+        user = get_user_model().objects.create_user(email='test@example.com', username='testuser', password='testpassword')
+
+        # Autenticar el usuario antes de ejecutar la mutación
+        self.client.login(email='test@example.com', password='testpassword')
+
+        self.idea1 = Idea.objects.create(
+            text='Idea 1',
+            author=user,
+            visibility='public',
+        )
+        self.idea2 = Idea.objects.create(
+            text='Idea 2',
+            author=user,
+            visibility='protected',
+        )
+        self.idea3 = Idea.objects.create(
+            text='Idea 3',
+            author=user,
+            visibility='private',
+        )
+
+        # Realiza una consulta GraphQL para obtener las ideas del usuario
+        query = '''
+            query {
+                ideas {
+                    id
+                    text
+                    visibility
+                    createdAt
+                }
+            }
+        '''
+
+        # Usa la función `self.client.execute` para realizar la consulta GraphQL
+        response = self.query(query)
+
+        # Verifica que la consulta fue exitosa
+        self.assertEqual(response.status_code, 200)
+
+        # Obtén las ideas del resultado de la consulta
+        ideas = response.json()['data']['ideas']
+
+        # Verifica que las ideas estén ordenadas por fecha de creación (de más recientes a más antiguas)
+        for i in range(len(ideas) - 1):
+            self.assertGreaterEqual(ideas[i]['createdAt'], ideas[i + 1]['createdAt'])
 
 

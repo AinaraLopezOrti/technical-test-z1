@@ -5,9 +5,8 @@ from django.contrib.auth import get_user_model
 from graphql_jwt.decorators import login_required
 from graphql_jwt import ObtainJSONWebToken
 import graphql_jwt
-from django.contrib.auth.tokens import default_token_generator
+from django.db.models import F
 from ..models import Idea, VISIBILITY_CHOICES
-from rest_framework.authtoken.models import Token
 
 class UserType(DjangoObjectType):
     """Definición del tipo GraphQL para el modelo de usuario."""
@@ -81,10 +80,10 @@ class ResetPassword(graphene.Mutation):
         user = get_user_model().objects.get(email=email)
         if user:
             # Generar un token para restablecer la contraseña
-            token = default_token_generator.make_token(user)
+            # token = default_token_generator.make_token(user)
 
             # Crear un enlace mágico con el token y enviarlo por correo electrónico
-            reset_link = f'http://example.com/reset-password?email={email}&token={token}'
+            # reset_link = f'http://example.com/reset-password?email={email}&token={token}'
 
             # Simulador de envio de correo electronico
             # send_mail(
@@ -128,7 +127,7 @@ class SetIdeaVisibility(graphene.Mutation):
         visibility = graphene.String(required=True)
 
     @login_required
-    def mutate(self, info, idea_id, visibility, ):
+    def mutate(self, info, idea_id, visibility):
 
         # Verificar si el usuario es el autor de la idea
         try:
@@ -179,7 +178,8 @@ class Query(graphene.ObjectType):
     
     @login_required
     def resolve_ideas(self, info):
-        # Consultar todas las ideas
-        return Idea.objects.all()
+        # Consultar todas las ideas del usuario autenticado ordenadas de mas recientes a mas antiguas
+        user = info.context.user
+        return Idea.objects.filter(author=user).order_by(F('created_at').desc())
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
