@@ -5,18 +5,12 @@ from django.contrib.auth import get_user_model
 from graphql_jwt.decorators import login_required
 from graphql_jwt import ObtainJSONWebToken
 import graphql_jwt
-from django.db.models import F
-from ..models import Idea, VISIBILITY_CHOICES
 
 class UserType(DjangoObjectType):
     """Definición del tipo GraphQL para el modelo de usuario."""
     class Meta:
         model = get_user_model()
 
-# Definición del tipo GraphQL para el modelo de Idea
-class IdeaType(DjangoObjectType):
-    class Meta:
-        model = Idea
 
 class RegisterUser(graphene.Mutation):
     """Mutación para registrar un nuevo usuario."""
@@ -96,80 +90,7 @@ class ResetPassword(graphene.Mutation):
             return cls(success=True)
         return cls(success=False)
 
-class CreateIdea(graphene.Mutation):
-    idea = graphene.Field(IdeaType)
 
-    class Arguments:
-        text = graphene.String(required=True)
-        visibility = graphene.String(required=True)
-
-    @login_required
-    def mutate(self, info, text, visibility):
-        # Obtener el usuario autenticado utilizando la variable "info" proporcionada por GraphQL
-        user = info.context.user
-
-        # Crear la nueva idea y asociarla al autor (usuario autenticado)
-        valid_visibility_choices = [choice[0] for choice in VISIBILITY_CHOICES]
-        if visibility not in valid_visibility_choices:
-            raise Exception('La visibilidad seleccionada no es válida.')
-
-        idea = Idea.objects.create(text=text, author=user, visibility=visibility)
-
-        # Devolver la idea creada en la respuesta
-        return CreateIdea(idea=idea)
-
-
-class SetIdeaVisibility(graphene.Mutation):
-    idea = graphene.Field(IdeaType)
-
-    class Arguments:
-        idea_id = graphene.ID(required=True)
-        visibility = graphene.String(required=True)
-
-    @login_required
-    def mutate(self, info, idea_id, visibility):
-
-        # Verificar si el usuario es el autor de la idea
-        try:
-            idea = Idea.objects.get(id=idea_id)
-        except Idea.DoesNotExist:
-            raise Exception('La idea no existe.')
-
-        if info.context.user != idea.author:
-            raise Exception('No tienes permisos para cambiar la visibilidad de esta idea.')
-
-        # Verificar si la visibilidad es una opción válida
-        valid_visibility_choices = [choice[0] for choice in VISIBILITY_CHOICES]
-        if visibility not in valid_visibility_choices:
-            raise Exception('La visibilidad seleccionada no es válida.')
-
-        # Actualizar la visibilidad de la idea y guardarla en la base de datos
-        idea.visibility = visibility
-        idea.save()
-
-        return SetIdeaVisibility(idea=idea)
-
-class DeleteIdea(graphene.Mutation):
-    success = graphene.Boolean()
-
-    class Arguments:
-        idea_id = graphene.ID(required=True)
-
-    @login_required
-    def mutate(self, info, idea_id):
-        # Verificar si la idea existe y si el usuario autenticado es el autor
-        try:
-            idea = Idea.objects.get(id=idea_id)
-        except Idea.DoesNotExist:
-            raise Exception('La idea no existe.')
-
-        if info.context.user != idea.author:
-            raise Exception('No tienes permisos para eliminar esta idea.')
-
-        # Eliminar la idea de la base de datos
-        idea.delete()
-
-        return DeleteIdea(success=True)
 
 class Mutation(graphene.ObjectType):
     """Definición de las mutaciones disponibles."""
@@ -180,15 +101,12 @@ class Mutation(graphene.ObjectType):
     change_password = ChangePassword.Field()
     token_auth = ObtainJSONWebToken.Field()
     reset_password = ResetPassword.Field()
-    create_idea = CreateIdea.Field()
-    set_idea_visibility = SetIdeaVisibility.Field()
-    delete_idea = DeleteIdea.Field()
 
 class Query(graphene.ObjectType):
     """Definición de las consultas disponibles."""
     users = graphene.List(UserType)
     logged_in = graphene.List(UserType)
-    ideas = graphene.List(IdeaType)
+    search_users = graphene.List(UserType, search_query=graphene.String(required=True))
 
     def resolve_users(self, info):
         """Consulta para obtener todos los usuarios registrados."""
@@ -199,9 +117,8 @@ class Query(graphene.ObjectType):
         return info.context.user
     
     @login_required
-    def resolve_ideas(self, info):
-        # Consultar todas las ideas del usuario autenticado ordenadas de mas recientes a mas antiguas
-        user = info.context.user
-        return Idea.objects.filter(author=user).order_by(F('created_at').desc())
+    def resolve_search_users(self, info, search_query):
+        # Realizar la búsqueda de usuarios por su nombre de usuario o parte de él
+        return get_user_model().objects.filter(username__icontains=search_query)
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

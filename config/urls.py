@@ -15,11 +15,11 @@ Including another URLconf
 """
 
 from django.urls import include, re_path
-from django.contrib import admin
+#from django.contrib import admin
 
 
 urlpatterns = [
     re_path(r'^api/', include('testz1.urls', namespace='api')),
-    re_path('', admin.site.urls),
+    #re_path('', admin.site.urls),
 ]
 

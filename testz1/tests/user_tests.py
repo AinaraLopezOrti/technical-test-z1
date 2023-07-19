@@ -1,9 +1,9 @@
 from graphene_django.utils.testing import GraphQLTestCase
 from django.contrib.auth import get_user_model
-from ..models import Idea
 
-class UserRegistrationTest(GraphQLTestCase):
-    GRAPHQL_URL = '/api/graphql/'
+class UserTest(GraphQLTestCase):
+
+    GRAPHQL_URL = '/api/user/graphql/'
 
     def test_user_registration(self):
         """
@@ -75,178 +75,51 @@ class UserRegistrationTest(GraphQLTestCase):
         updated_user = get_user_model().objects.get(email='test@example.com')
         self.assertTrue(updated_user.check_password('newpassword'))
     
-    def test_create_idea(self):
-        """
-        Prueba de creación de una idea mediante el API GraphQL con usuario autenticado.
-        """
+    def test_user_search(self):
+        # Crear usuarios
 
-        user = get_user_model().objects.create_user(email='test@example.com', username='testuser', password='testpassword')
-
-        # Autenticar el usuario antes de ejecutar la mutación
-        self.client.login(email='test@example.com', password='testpassword')
-        
-        query = '''
-            mutation {
-                createIdea(text: "Nueva idea", visibility: "private") {
-                    idea {
-                        id
-                        text
-                        author {
-                            id
-                            username
-                        }
-                    }
-                }
-            }
-        '''
-        response = self.query(query)
-
-        # Verificar que no haya errores en la respuesta
-        self.assertResponseNoErrors(response)
-
-        # Verificar que la idea haya sido creada correctamente
-        self.assertEqual(response.json()['data']['createIdea']['idea']['text'], 'Nueva idea')
-        # Verificar que la idea esté relacionada con el usuario autenticado
-        self.assertEqual(response.json()['data']['createIdea']['idea']['author']['username'], user.username)
-
-
-    def test_change_visibility(self):
-        """
-        Prueba de modificación de la visibilidad de una idea de privado a protegido mediante el API GraphQL con usuario autenticado.
-        """
-
-        user = get_user_model().objects.create_user(email='test@example.com', username='testuser', password='testpassword')
+        get_user_model().objects.create_user(email='user1@example.com', username='user1', password='testpassword')
+        get_user_model().objects.create_user(email='user2@example.com', username='user2', password='testpassword')
+        get_user_model().objects.create_user(email='other@example.com', username='other', password='testpassword')
 
         # Autenticar el usuario antes de ejecutar la mutación
-        self.client.login(email='test@example.com', password='testpassword')
-        
-        query = '''
-            mutation {
-                createIdea(text: "Nueva idea", visibility: "private") {
-                    idea {
-                        id
-                        text
-                        visibility
-                        author {
-                            id
-                            username
-                        }
-                    }
-                }
-            }
-        '''
-        response = self.query(query)
+        self.client.login(email='other@example.com', password='testpassword')
 
-        # Verificar que no haya errores en la respuesta
-        self.assertResponseNoErrors(response)
-
-        # Verificar que la idea haya sido creada correctamente
-        self.assertEqual(response.json()['data']['createIdea']['idea']['text'], 'Nueva idea')
-        # Verificar que la idea esté relacionada con el usuario autenticado
-        self.assertEqual(response.json()['data']['createIdea']['idea']['author']['username'], user.username)
-
-        # Verificar que la idea tiene visibilidad privada
-        self.assertEqual(response.json()['data']['createIdea']['idea']['visibility'], "PRIVATE")
-
-
-        idea_id = response.json()['data']['createIdea']['idea']['id']
-        query = '''
-            mutation {
-                setIdeaVisibility(visibility: "protected", ideaId: "%s") {
-                    idea {
-                        id
-                        text
-                        visibility
-                        author {
-                            id
-                            username
-                        }
-                    }
-                }
-            }
-        ''' % idea_id
-        response = self.query(query)
-        # Verificar que la idea tiene visibilidad privada
-        self.assertEqual(response.json()['data']['setIdeaVisibility']['idea']['visibility'], "PROTECTED")
-
-
-    def test_ideas_ordered_by_created_at(self):
-        user = get_user_model().objects.create_user(email='test@example.com', username='testuser', password='testpassword')
-
-        # Autenticar el usuario antes de ejecutar la mutación
-        self.client.login(email='test@example.com', password='testpassword')
-
-        self.idea1 = Idea.objects.create(
-            text='Idea 1',
-            author=user,
-            visibility='public',
-        )
-        self.idea2 = Idea.objects.create(
-            text='Idea 2',
-            author=user,
-            visibility='protected',
-        )
-        self.idea3 = Idea.objects.create(
-            text='Idea 3',
-            author=user,
-            visibility='private',
-        )
-
-        # Realiza una consulta GraphQL para obtener las ideas del usuario
+        # Realiza una búsqueda por parte del nombre de usuario
         query = '''
             query {
-                ideas {
+                searchUsers(searchQuery: "user") {
                     id
-                    text
-                    visibility
-                    createdAt
+                    username
+                    email
                 }
             }
-        '''
-
-        # Usa la función `self.client.execute` para realizar la consulta GraphQL
+            '''
+        
         response = self.query(query)
 
-        # Verifica que la consulta fue exitosa
-        self.assertEqual(response.status_code, 200)
+        # Verificar que no haya errores en la respuesta
+        self.assertResponseNoErrors(response)
 
-        # Obtén las ideas del resultado de la consulta
-        ideas = response.json()['data']['ideas']
+        self.assertEqual(len(response.json()['data']['searchUsers']), 2)
+        usernames = {user['username'] for user in response.json()['data']['searchUsers']}
+        self.assertSetEqual(usernames, {'user1', 'user2'})
 
-        # Verifica que las ideas estén ordenadas por fecha de creación (de más recientes a más antiguas)
-        for i in range(len(ideas) - 1):
-            self.assertGreaterEqual(ideas[i]['createdAt'], ideas[i + 1]['createdAt'])
-
-    
-    def test_delete_idea(self):
-        user = get_user_model().objects.create_user(email='test@example.com', username='testuser', password='testpassword')
-
-        idea = Idea.objects.create(
-            text='Prueba de idea',
-            author=user,
-            visibility='public',
-        )
-
-        # Autenticar el usuario antes de ejecutar la mutación
-        self.client.login(email='test@example.com', password='testpassword')
-
-
-        # Realizar la mutación para eliminar la idea
+        # Realiza una búsqueda por nombre de usuario completo
         query = '''
-            mutation {
-              deleteIdea(ideaId: "%s") {
-                success
-              }
+            query {
+                searchUsers(searchQuery: "user1") {
+                    id
+                    username
+                    email
+                }
             }
-        ''' % str(idea.id)
-
+            '''
+        
         response = self.query(query)
-       # Verifica que la consulta fue exitosa
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json()['data']['deleteIdea']['success'])
 
-        # Verificar que la idea se eliminó de la base de datos
-        self.assertFalse(Idea.objects.filter(id=idea.id).exists())
+        # Verificar que no haya errores en la respuesta
+        self.assertResponseNoErrors(response)
 
-
-
+        self.assertEqual(len(response.json()['data']['searchUsers']), 1)
+        self.assertEqual(response.json()['data']['searchUsers'][0]['username'], 'user1')
