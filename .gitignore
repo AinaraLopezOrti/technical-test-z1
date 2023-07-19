@@ -1,0 +1,10 @@
+/venv
+*.py[cod]
+__pycache__
+.git
+.DS_Store
+/media
+.env
+config/settings/localConfig.py
+DBBACKUP.sql
+db.sqlite3
