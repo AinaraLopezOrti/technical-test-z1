@@ -201,3 +201,32 @@ Para incluir el token JWT en las solicitudes, agrega un encabezado "Authorizatio
 ```
 
 Menos para el registro de usuarios y el reseteo de la contraseña es necesario estar autenticado para hacer las pruebas.
+
+## URL para realizar peticiones al API GraphQL
+
+A continuación, se detallan las URL donde se deben hacer las peticiones para acceder a las diferentes funcionalidades del API GraphQL desarrollado en Django. Ten en cuenta que se debe reemplazar "PORT" por el número de puerto en el que esté ejecutándose tu servidor de desarrollo.
+
+### 1. Panel de Administrador
+URL: http://127.0.0.1:PORT/
+Descripción: Esta es la URL para acceder al panel de administrador de Django. Aquí podrás gestionar los modelos y datos de la aplicación mediante la interfaz administrativa proporcionada por Django.
+
+### 2. Registro y Autenticación de Usuarios, Cambio y Restauración de Contraseña, Búsqueda de Usuarios
+
+URL: http://127.0.0.1:PORT/api/user/graphql/
+Descripción: Esta URL es para realizar peticiones GraphQL relacionadas con el registro y autenticación de usuarios, cambio y restauración de contraseña, y búsqueda de usuarios por nombre de usuario.
+
+### 3. Publicación de Ideas, Gestión de Ideas, Visualización de Ideas
+
+URL: http://127.0.0.1:PORT/api/idea/graphql/
+Descripción: Esta URL es para realizar peticiones GraphQL relacionadas con la publicación de ideas, gestión de ideas (edición y eliminación) y visualización de ideas de diferentes usuarios.
+
+### 4. Seguimiento de Usuarios
+
+URL: http://127.0.0.1:PORT/api/follow/graphql/
+Descripción: Esta URL es para realizar peticiones GraphQL relacionadas con el seguimiento de usuarios, incluyendo solicitudes de seguimiento y aprobación/denegación de solicitudes.
+
+### Notificaciones
+
+Las notificaciones en el API GraphQL se han implementado mediante señales (signals) en Django. Cuando un usuario al que otro usuario sigue publique una nueva idea a la que este último tiene acceso, se generará una notificación automáticamente y se enviará al usuario seguidor. Esto garantiza que los usuarios reciban notificaciones en tiempo real sobre nuevas publicaciones relevantes.
+
+Es importante tener en cuenta estas URLs al realizar las peticiones al API GraphQL para asegurarse de acceder a las funcionalidades correctas y realizar las pruebas de manera adecuada. Además, la implementación de notificaciones a través de señales garantiza una experiencia de usuario mejorada, proporcionando información actualizada sobre nuevas ideas de usuarios seguidos.
