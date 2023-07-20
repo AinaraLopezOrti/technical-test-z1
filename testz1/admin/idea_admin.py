@@ -8,8 +8,6 @@ class IdeaAdmin(admin.ModelAdmin):
     search_fields = ('author', 'visibility')
     ordering = ('-created_at',)
 
-    # Si deseas agregar campos adicionales al formulario de creación o edición de usuarios, puedes hacerlo aquí.
-    # fieldsets = ...
 
 # Registra el modelo User con la clase CustomUserAdmin
 admin.site.register(Idea, IdeaAdmin)

@@ -4,9 +4,9 @@
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        "NAME": "testz1",
-        "USER": "videoback",
-        "PASSWORD": "videobacklocal",
+        "NAME": "dbname",
+        "USER": "username",
+        "PASSWORD": "password",
         "HOST": "localhost"
     }
 }
