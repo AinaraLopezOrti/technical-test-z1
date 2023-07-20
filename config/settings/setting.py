@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'request',
     'graphene_django',
     'django_filters',
-    'django_extensions',
     'testz1',
 ]
 

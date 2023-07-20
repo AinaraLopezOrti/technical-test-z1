@@ -23,3 +23,6 @@ urlpatterns = [
     re_path('', admin.site.urls),
 ]
 
+admin.site.site_header = 'Prueba técnica Z1 - Panel de administrador'
+admin.site.index_title = ' '                 # default: "Site administration"
+admin.site.site_title = 'Prueba técnica Z1'

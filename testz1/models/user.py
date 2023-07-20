@@ -22,10 +22,31 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Modelo personalizado de usuario que utiliza el email como nombre de usuario."""
-    email = models.EmailField(unique=True)
-    username = models.CharField(max_length=150, unique=True)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    class Meta:
+        verbose_name = 'Usuario'
+        verbose_name_plural = 'Usuarios'
+
+    email = models.EmailField(
+        unique=True,
+        verbose_name='Correo electrónico',
+        help_text='Introduce tu dirección de correo electrónico.'
+    )
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        verbose_name='Nombre de usuario',
+        help_text='Introduce tu nombre de usuario.'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Activo',
+        help_text='Indica si el usuario está activo.'
+    )
+    is_staff = models.BooleanField(
+        default=False,
+        verbose_name='Es personal',
+        help_text='Indica si el usuario es parte del personal o staff.'
+    )
 
     objects = UserManager()
 
