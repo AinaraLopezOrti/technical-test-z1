@@ -249,11 +249,11 @@ python manage.py test
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mydb',  # Nombre de la base de datos, el mismo que definiste en el Dockerfile de PostgreSQL
-        'USER': 'myuser',  # Usuario de la base de datos, el mismo que definiste en el Dockerfile de PostgreSQL
-        'PASSWORD': 'mypassword',  # Contraseña del usuario de la base de datos, el mismo que definiste en el Dockerfile de PostgreSQL
-        'HOST': 'db',  # Nombre del servicio del contenedor de PostgreSQL (especificado en el docker-compose.yml)
-        'PORT': '5432',  # Puerto del servicio de PostgreSQL (por defecto, el 5432)
+        'NAME': 'mydb',  
+        'USER': 'myuser', 
+        'PASSWORD': 'mypassword', 
+        'HOST': 'db', 
+        'PORT': '5432', 
     }
 }
 ```
