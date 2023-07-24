@@ -1,6 +1,7 @@
 import graphene
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
+from django.contrib.auth import get_user_model
 from ..models import Follow, STATUS_CHOICES
 from .user_schema import UserType
 
@@ -8,6 +9,31 @@ class FollowRequestType(DjangoObjectType):
     class Meta:
         model = Follow
 
+class FollowRequestMutation(graphene.Mutation):
+    class Arguments:
+        user_id = graphene.ID(required=True)
+
+    success = graphene.Boolean()
+    follow_id = graphene.ID()
+
+    @login_required
+    def mutate(self, info, user_id):
+        user = info.context.user
+        if not user.is_authenticated:
+            raise Exception("You must be logged in to perform this action.")
+
+        try:
+            following_user = get_user_model().objects.get(pk=user_id)
+        except get_user_model().DoesNotExist:
+            raise Exception("User does not exist.")
+        
+        if following_user == user:
+            raise Exception("You cannot follow yourself.")
+
+        follow_request = Follow.objects.create(follower=user, following=following_user, status='pending')
+
+        return FollowRequestMutation(success=True, follow_id=str(follow_request.id))
+    
 class RespondToFollowRequest(graphene.Mutation):
     success = graphene.Boolean()
 
@@ -33,6 +59,7 @@ class RespondToFollowRequest(graphene.Mutation):
         follow_request.save()
 
         return RespondToFollowRequest(success=True)
+
 
 class UnfollowUser(graphene.Mutation):
     success = graphene.Boolean()
@@ -76,6 +103,7 @@ class RemoveFollower(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     """Definición de las mutaciones disponibles."""
     respond_to_follow_request = RespondToFollowRequest.Field()
+    request_follow = FollowRequestMutation.Field()
     unfollow_user = UnfollowUser.Field()
     remove_follower = RemoveFollower.Field()
 

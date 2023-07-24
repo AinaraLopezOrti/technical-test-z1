@@ -293,7 +293,7 @@ Una vez que tengas un usuario registrado, podrás utilizar la autenticación JWT
 
 ```
 mutation {
-    tokenAuth(username: "testuser", password: "testpassword") {
+    tokenAuth(email: "test@example.com", password: "testpassword") {
         token
     }
 }
@@ -304,7 +304,7 @@ mutation {
 Para incluir el token JWT en las solicitudes, agrega un encabezado "Authorization" con el valor "JWT {token}" en cada petición. Por ejemplo:
 
 ```
-"Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+{"Authorization": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."}
 ```
 
 Menos para el registro de usuarios y el reseteo de la contraseña es necesario estar autenticado para hacer las pruebas.
@@ -314,7 +314,7 @@ Menos para el registro de usuarios y el reseteo de la contraseña es necesario e
 A continuación, se detallan las URL donde se deben hacer las peticiones para acceder a las diferentes funcionalidades del API GraphQL desarrollado en Django. Ten en cuenta que se debe reemplazar "PORT" por el número de puerto en el que esté ejecutándose tu servidor de desarrollo.
 
 ### 1. Panel de Administrador
-URL: http://127.0.0.1:PORT/
+URL: http://127.0.0.1:PORT/admin/
 Descripción: Esta es la URL para acceder al panel de administrador de Django. Aquí podrás gestionar los modelos y datos de la aplicación mediante la interfaz administrativa proporcionada por Django.
 
 ### 2. Registro y Autenticación de Usuarios, Cambio y Restauración de Contraseña, Búsqueda de Usuarios

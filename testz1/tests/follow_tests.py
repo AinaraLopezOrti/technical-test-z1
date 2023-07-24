@@ -5,6 +5,37 @@ from ..models import Follow
 class FollowTest(GraphQLTestCase):
     GRAPHQL_URL = '/api/follow/graphql/'
 
+    def test_follow_request(self):
+        # Crea una solicitud de seguimiento de un usuario de prueba a otro
+        follower = get_user_model().objects.create_user(email='follower@example.com', username='follower', password='testpassword')
+        following = get_user_model().objects.create_user(email='following@example.com', username='following', password='testpassword')
+
+        # Autenticar el usuario que realizará la solicitud
+        self.client.login(email='follower@example.com', password='testpassword')
+
+        # Ejecuta la mutación para solicitar seguir al usuario
+        query = '''
+            mutation {
+                requestFollow(userId: "%s") {
+                    success
+                    followId
+                }
+            }
+        ''' % following.id
+
+        response = self.query(query)
+
+        # Verificar que no haya errores en la respuesta
+        self.assertResponseNoErrors(response)
+
+        # Verifica que la mutación fue exitosa
+        self.assertTrue(response.json()['data']['requestFollow']['success'])
+
+        # Verificar que la solicitud de seguimiento fue creada en la base de datos y tiene estado "pending"
+        follow_request = Follow.objects.filter(follower=follower, following=following, status='pending').first()
+        self.assertIsNotNone(follow_request)
+
+
     def test_respond_to_follow_request(self):
         # Crea una solicitud de seguimiento de un usuario de prueba a otro
         follower = get_user_model().objects.create_user(email='follower@example.com', username='follower', password='testpassword')

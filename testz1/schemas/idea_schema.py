@@ -129,7 +129,7 @@ class Query(graphene.ObjectType):
             if idea.visibility == 'public':
                 # Idea pública, siempre visible para todos
                 visible_ideas.append(idea)
-            elif idea.visibility == 'protected' and idea.author.id in following_users:
+            elif idea.visibility == 'protected' and (idea.author.id in following_users or idea.author == info.context.user):
                 # Idea protegida, solo visible si el autor es seguido por el usuario autenticado
                 visible_ideas.append(idea)
             elif idea.visibility == 'private' and idea.author == info.context.user:

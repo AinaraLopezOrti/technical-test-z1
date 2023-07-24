@@ -20,7 +20,7 @@ from django.contrib import admin
 
 urlpatterns = [
     re_path(r'^api/', include('testz1.urls', namespace='api')),
-    re_path('', admin.site.urls),
+    re_path('admin/', admin.site.urls),
 ]
 
 admin.site.site_header = 'Prueba técnica Z1 - Panel de administrador'
