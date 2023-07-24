@@ -49,7 +49,33 @@ Los usuarios recibirán notificaciones cada vez que un usuario al que siguen pub
 
 Asegúrate de tener instalado Python 3.9 en tu sistema antes de comenzar. Puedes descargarlo desde el sitio web oficial de Python (https://www.python.org/downloads/) y seguir las instrucciones de instalación específicas para tu sistema operativo.
 
+Instalar pip
+
+#### Windows:
+
+1. Descarga el archivo get-pip.py desde el sitio oficial: https://bootstrap.pypa.io/get-pip.py
+2. Abre una ventana de comandos (cmd) y navega a la ubicación donde descargaste get-pip.py
+3. Ejecuta el siguiente comando para instalar pip:
+
+```
+bash
+python get-pip.py
+```
+
+#### Ubuntu / macOS:
+
+1. Abre una terminal.
+2. Si estás utilizando Python 2.x, primero asegúrate de tener python-setuptools instalado. Para Python 3.x, ya debería estar instalado por defecto.
+3. Ejecuta el siguiente comando para instalar pip:
+```
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python get-pip.py
+```
+
+
 ## Pasos para poner en marcha el proyecto Django
+
+## Sin docker
 
 ### 1. Crear un entorno virtual
 
@@ -67,10 +93,67 @@ venv\Scripts\activate
 #### Ubuntu / macOS:
 
 ```
-pip install virtualenv
+pip/pip3 install virtualenv
 virtualenv -p python3.9 venv
 source venv/bin/activate
 ```
+
+Si da el error "zsh: command not found: virtualenv" seguir los siguientes pasos:
+#### Windows:
+
+1. Abre el símbolo del sistema (Command Prompt) o PowerShell.
+2. Ejecutar el siguiente comando:
+```
+pip3 show virtualenv
+```
+Si por ejemplo con el primer comenado ha salido lo siguiente por la terminal:
+```
+Version: 20.24.1
+Summary: Virtual Python Environment builder
+Home-page: 
+Author: 
+Author-email: 
+License: 
+Location: /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages
+Requires: distlib, filelock, platformdirs
+Required-by:
+```
+3. Ejecuta el siguiente comando para agregar virtualenv a tu variable de entorno PATH:
+
+```
+setx PATH "%PATH%;C:\Library\Frameworks\Python.framework\Versions\3.11\bin"
+```
+
+#### Ubuntu / macOS:
+
+1. Abre el archivo de configuración de tu terminal (por ejemplo, .bashrc, .zshrc, etc.) en un editor de texto o usando el comando nano:
+
+```
+pip3 show virtualenv
+nano ~/.bashrc
+```
+
+Si por ejemplo con el primer comenado ha salido lo siguiente por la terminal:
+```
+Version: 20.24.1
+Summary: Virtual Python Environment builder
+Home-page: 
+Author: 
+Author-email: 
+License: 
+Location: /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages
+Requires: distlib, filelock, platformdirs
+Required-by:
+```
+
+2. Agrega la siguiente línea al archivo (si no existe):
+```
+export PATH="/Library/Frameworks/Python.framework/Versions/3.11/bin:$PATH"
+```
+
+3. Guarda el archivo y ciérralo. Luego, recarga la configuración de la terminal o abre una nueva terminal para que los cambios surtan efecto.
+
+Recuerda cerrar y abrir una nueva terminal después de realizar los cambios para que surtan efecto.
 
 ### 2. Instalar las dependencias
 Dentro del entorno virtual, instala las dependencias necesarias para el proyecto usando pipenv:
@@ -154,6 +237,30 @@ Se ha creado un test para cada historia de usuario del proyecto. Para ejecutar t
 
 ```
 python manage.py test
+```
+## Con docker
+
+1. Primero, crea el archivo localConfig.py en la ruta config/settings/.
+
+2. A continuación, agrega el siguiente contenido al archivo localConfig.py:
+```
+# config/settings/localConfig.py
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydb',  # Nombre de la base de datos, el mismo que definiste en el Dockerfile de PostgreSQL
+        'USER': 'myuser',  # Usuario de la base de datos, el mismo que definiste en el Dockerfile de PostgreSQL
+        'PASSWORD': 'mypassword',  # Contraseña del usuario de la base de datos, el mismo que definiste en el Dockerfile de PostgreSQL
+        'HOST': 'db',  # Nombre del servicio del contenedor de PostgreSQL (especificado en el docker-compose.yml)
+        'PORT': '5432',  # Puerto del servicio de PostgreSQL (por defecto, el 5432)
+    }
+}
+```
+
+3. Ejecutar el siguiente comando:
+```
+docker-compose up --build
 ```
 
 ## Ejecución de Pruebas con GraphQL y Autenticación JWT

@@ -1,0 +1,7 @@
+# Usa la imagen base de PostgreSQL
+FROM postgres:latest
+
+# Variables de entorno para personalizar el usuario, contraseña y nombre de la base de datos (opcional)
+ENV POSTGRES_USER=myuser
+ENV POSTGRES_PASSWORD=mypassword
+ENV POSTGRES_DB=mydb
